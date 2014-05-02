@@ -7,20 +7,26 @@ ZumoMotors motors;
 
 void setup() {
 
+  Serial.begin(9600);
   Wire.begin();
   compass.init();
   compass.enableDefault();
 
-  compass.m_min = (LSM303::vector<int16_t>){-273, -658, +1994};
-  compass.m_max = (LSM303::vector<int16_t>){-266, -646, +2005};
+  // min: {  -777,  -1426,  -4096}    max: {  +163,   -294,  +2043}
+  compass.m_min = (LSM303::vector<int16_t>){  -777,  -1426,  -4096};
+  compass.m_max = (LSM303::vector<int16_t>){  +163,   -294,  +2043};
 }
 
 void loop() {
+  move_straight(200, 1000);
   int heading_start = read_heading();
+  delay(500);
+  rotate_to((heading_start + 60) % 360, 100, 30, 5);
+  delay(500);
   move_straight(200, 1000);
-  rotate_to(heading_start + 60, 300, 100, 2);
-  move_straight(200, 1000);
-  rotate_to(heading_start, 100, 300, 2);
+  delay(500);
+  rotate_to(heading_start, 100, 30, 5);
+  delay(500);
 }
 
 /* ---------- ---------- ---------- ---------- ---------- */
@@ -37,8 +43,11 @@ void move_straight(int speed, int duration) {
 
 void rotate_to(float angle, int speed_left, int speed_right, int step_duration) {
   float angle_reading = read_heading();
-  while (angle - angle_reading > 10 && angle_reading - angle < 10) {
+  float diff = abs(angle - angle_reading);
+  while (diff > 20) {
     angle_reading = read_heading();
+    diff = abs(angle - angle_reading);
+    Serial.println(diff);
     move(speed_left, speed_right, step_duration);
   }
 }
