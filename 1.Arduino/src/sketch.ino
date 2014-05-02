@@ -14,9 +14,9 @@ Pushbutton button(ZUMO_BUTTON);
 
 
 #define FULL_SPEED 200
-#define HALF_SPEED 100
+#define HALF_SPEED 50
 
-#define EPSILON 5
+#define EPSILON 10
 
 
 void setup()
@@ -28,10 +28,12 @@ void setup()
 
   compass.init();
   compass.enableDefault();
-  compass.m_min = (LSM303::vector<int16_t>){-1391, -705, -4096};
-  compass.m_max = (LSM303::vector<int16_t>){-675, +223, -4096};
+  compass.m_min = (LSM303::vector<int16_t>){-1240, -616, -4096};
+  compass.m_max = (LSM303::vector<int16_t>){-648, +174, -4096};
+  
+//  min: { -1240,   -616,  -4096}    max: {  -648,   +174,  -4096}
 
-//in: { -1391,   -705,  -4096}    max: {  -675,   +223,  -4096}
+
 
   // Wait for the user button to be pressed and released
   button.waitForButton();
@@ -42,49 +44,56 @@ void loop()
 {
   digitalWrite(LED_PIN, HIGH);
 
-  float origin, current, final;
+  int origin, current, final;
+
+  // DECALAGE
+  compass.read();
+  origin = int(compass.heading());
+  final = (origin + 55) % 360;
+  motors.setLeftSpeed(HALF_SPEED);
+  motors.setRightSpeed(FULL_SPEED);
+  do {
+    compass.read();
+    current = int(compass.heading());
+    Serial.println(current);
+  } while (abs(current - final) > EPSILON);
+
 
   // PLUS_LINE
-  Serial.println("Tout droit");
   motors.setLeftSpeed(FULL_SPEED);
   motors.setRightSpeed(FULL_SPEED);
   delay(100);
 
   // PLUS_LOOP
-  Serial.println("A droite");
   compass.read();
-  Serial.println("1");
-  origin = compass.heading();
-  Serial.println("2");
-  final = (int(origin) + 270) % 360;
+  origin = int(compass.heading());
+  final = (origin + 280) % 360;
   motors.setLeftSpeed(FULL_SPEED);
   motors.setRightSpeed(HALF_SPEED);
   do {
     compass.read();
-    current = compass.heading();
+    current = int(compass.heading());
     Serial.println(current);
   } while (abs(current - final) > EPSILON);
 
   // PLUS_LINE
-  Serial.println("Tout droit");
   motors.setLeftSpeed(FULL_SPEED);
   motors.setRightSpeed(FULL_SPEED);
   delay(200);
 
   // MINUS_LOOP
-  Serial.println("A gauche");
   compass.read();
-  origin = compass.heading();
-  final = (int(origin) + 90) % 360;
+  origin = int(compass.heading());
+  final = (origin + 80) % 360;
   motors.setLeftSpeed(HALF_SPEED);
   motors.setRightSpeed(FULL_SPEED);
   do {
     compass.read();
-    current = compass.heading();
+    current = int(compass.heading());
+    Serial.println(current);
   } while (abs(current - final) > EPSILON);
 
   // MINUS_LINE
-  Serial.println("Tout droit");
   motors.setLeftSpeed(FULL_SPEED);
   motors.setRightSpeed(FULL_SPEED);
   delay(100);
