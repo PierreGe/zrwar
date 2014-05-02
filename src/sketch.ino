@@ -1,33 +1,50 @@
 #include <Wire.h>
 #include <LSM303.h>
+#include <ZumoMotors.h>
 
 LSM303 compass;
-LSM303::vector<int16_t> running_min = {32767, 32767, 32767}, running_max = {-32768, -32768, -32768};
-
-char report[80];
+ZumoMotors motors;
 
 void setup() {
-  Serial.begin(9600);
+
   Wire.begin();
   compass.init();
   compass.enableDefault();
+
+  compass.m_min = (LSM303::vector<int16_t>){-273, -658, +1994};
+  compass.m_max = (LSM303::vector<int16_t>){-266, -646, +2005};
 }
 
 void loop() {
+  int heading_start = read_heading();
+  move_straight(200, 1000);
+  rotate_to(heading_start + 60, 300, 100, 2);
+  move_straight(200, 1000);
+  rotate_to(heading_start, 100, 300, 2);
+}
+
+/* ---------- ---------- ---------- ---------- ---------- */
+
+float read_heading() {
   compass.read();
+  float heading = compass.heading((LSM303::vector<int>){0, 1, 0});
+  return heading;
+}
 
-  running_min.x = min(running_min.x, compass.m.x);
-  running_min.y = min(running_min.y, compass.m.y);
-  running_min.z = min(running_min.z, compass.m.z);
+void move_straight(int speed, int duration) {
+  move(speed, speed, duration);
+}
 
-  running_max.x = max(running_max.x, compass.m.x);
-  running_max.y = max(running_max.y, compass.m.y);
-  running_max.z = max(running_max.z, compass.m.z);
+void rotate_to(float angle, int speed_left, int speed_right, int step_duration) {
+  float angle_reading = read_heading();
+  while (angle - angle_reading > 10 && angle_reading - angle < 10) {
+    angle_reading = read_heading();
+    move(speed_left, speed_right, step_duration);
+  }
+}
 
-  snprintf(report, sizeof(report), "min: {%+6d, %+6d, %+6d}    max: {%+6d, %+6d, %+6d}",
-    running_min.x, running_min.y, running_min.z,
-    running_max.x, running_max.y, running_max.z);
-  Serial.println(report);
-
-  delay(100);
+void move(int speed_left, int speed_right, int duration) {
+  motors.setLeftSpeed(speed_left);
+  motors.setRightSpeed(speed_right);
+  delay(duration);
 }
