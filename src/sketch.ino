@@ -12,7 +12,6 @@ void setup() {
   compass.init();
   compass.enableDefault();
 
-  // min: {  -777,  -1426,  -4096}    max: {  +163,   -294,  +2043}
   compass.m_min = (LSM303::vector<int16_t>){  -777,  -1426,  -4096};
   compass.m_max = (LSM303::vector<int16_t>){  +163,   -294,  +2043};
 }
@@ -41,14 +40,19 @@ void move_straight(int speed, int duration) {
   move(speed, speed, duration);
 }
 
-void rotate_to(float angle, int speed_left, int speed_right, int step_duration) {
-  float angle_reading = read_heading();
-  float diff = abs(angle - angle_reading);
-  while (diff > 20) {
-    angle_reading = read_heading();
-    diff = abs(angle - angle_reading);
-    Serial.println(diff);
-    move(speed_left, speed_right, step_duration);
+void rotate_to(float target, int speed_left, int speed_right, int step_duration) {
+  motors.setLeftSpeed(speed_left);
+  motors.setRightSpeed(speed_right);
+
+  float reading = read_heading();
+  float last_reading = reading;
+  while (abs(target - reading) > 5) {
+    reading = read_heading();
+    if (abs(reading - last_reading) > 30)
+      continue;
+
+    delay(10);
+    last_reading = reading;
   }
 }
 
