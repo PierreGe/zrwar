@@ -1,6 +1,7 @@
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
 #include <QTRSensors.h>
+#include <ZumoBuzzer.h>
 #include <ZumoReflectanceSensorArray.h>
 #include <avr/pgmspace.h>
 #include <Wire.h>
@@ -26,15 +27,18 @@ ZumoReflectanceSensorArray sensors(QTR_NO_EMITTER_PIN);
 // Motor Settings
 ZumoMotors motors;
 
+ZumoBuzzer buzzer;
+
+
 // these might need to be tuned for different motor types
-#define REVERSE_SPEED     200 // 0 is stopped, 400 is full speed
-#define TURN_SPEED        200
-#define SEARCH_SPEED      200
+#define REVERSE_SPEED     300 // 0 is stopped, 400 is full speed
+#define TURN_SPEED        300
+#define SEARCH_SPEED      180
 #define SUSTAINED_SPEED   400 // switches to SUSTAINED_SPEED from FULL_SPEED after FULL_SPEED_DURATION_LIMIT ms
 #define FULL_SPEED        400
 #define STOP_DURATION     100 // ms
 #define REVERSE_DURATION  200 // ms
-#define TURN_DURATION     300 // ms
+#define TURN_DURATION     180 // ms
 
 #define RIGHT 1
 #define LEFT -1
@@ -135,6 +139,7 @@ void setup()
   //motors.flipRightMotor(true);
 
   pinMode(LED, HIGH);
+  buzzer.playMode(PLAY_CHECK);
   waitForButtonAndCountDown(false);
 }
 
@@ -148,16 +153,37 @@ void waitForButtonAndCountDown(bool restarting)
   digitalWrite(LED, HIGH);
   button.waitForButton();
   digitalWrite(LED, LOW);
-   
+  
   // visible countdown
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 4; i++)
   {
+    digitalWrite(LED, HIGH);
+    buzzer.playNote(NOTE_C(5), 250, 10);
+    delay(250);
     digitalWrite(LED, LOW);
     delay(750);
-    digitalWrite(LED, HIGH);
-    delay(250);
   }
-  
+
+  buzzer.playNote(NOTE_C(6), 500, 10);
+
+  digitalWrite(LED, HIGH);
+  delay(140);
+  digitalWrite(LED, LOW);
+  delay(130);
+  digitalWrite(LED, HIGH);
+  delay(120);
+  digitalWrite(LED, LOW);
+  delay(110);
+  digitalWrite(LED, HIGH);
+  delay(100);
+  digitalWrite(LED, LOW);
+  delay(90);
+  digitalWrite(LED, HIGH);
+  delay(80);
+  digitalWrite(LED, LOW);
+  delay(70);
+  digitalWrite(LED, HIGH);
+
   // reset loop variables
   in_contact = false;  // 1 if contact made; 0 if no contact or contact lost
   contact_made_time = 0;

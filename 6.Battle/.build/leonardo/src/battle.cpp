@@ -1,8 +1,8 @@
 #include <Arduino.h>
-#include <ZumoBuzzer.h>
 #include <ZumoMotors.h>
 #include <Pushbutton.h>
 #include <QTRSensors.h>
+#include <ZumoBuzzer.h>
 #include <ZumoReflectanceSensorArray.h>
 #include <avr/pgmspace.h>
 #include <Wire.h>
@@ -16,53 +16,15 @@ bool check_for_contact();
 void on_contact_made();
 void on_contact_lost();
 #line 1 "src/battle.ino"
-//#include <ZumoBuzzer.h>
 //#include <ZumoMotors.h>
 //#include <Pushbutton.h>
 //#include <QTRSensors.h>
+//#include <ZumoBuzzer.h>
 //#include <ZumoReflectanceSensorArray.h>
 //#include <avr/pgmspace.h>
 //#include <Wire.h>
 //#include <LSM303.h>
 
-/* This example uses the accelerometer in the Zumo Shield's onboard LSM303DLHC with the LSM303 Library to 
- * detect contact with an adversary robot in the sumo ring. The LSM303 Library is not included in the Zumo 
- * Shield libraries; it can be downloaded separately from GitHub at: 
- *
- *    https://github.com/pololu/LSM303 
- *
- * This example extends the BorderDetect example, which makes use of the onboard Zumo Reflectance Sensor Array
- * and its associated library to detect the border of the sumo ring.  It also illustrates the use of the 
- * ZumoMotors, PushButton, and ZumoBuzzer libraries.
- *
- * In loop(), the program reads the x and y components of acceleration (ignoring z), and detects a
- * contact when the magnitude of the 3-period average of the x-y vector exceeds an empirically determined
- * XY_ACCELERATION_THRESHOLD.  On contact detection, the forward speed is increased to FULL_SPEED from
- * the default SEARCH_SPEED, simulating a "fight or flight" response.
- *
- * The program attempts to detect contact only when the Zumo is going straight.  When it is executing a
- * turn at the sumo ring border, the turn itself generates an acceleration in the x-y plane, so the 
- * acceleration reading at that time is difficult to interpret for contact detection.  Since the Zumo also 
- * accelerates forward out of a turn, the acceleration readings are also ignored for MIN_DELAY_AFTER_TURN 
- * milliseconds after completing a turn. To further avoid false positives, a MIN_DELAY_BETWEEN_CONTACTS is 
- * also specified.
- *
- * This example also contains the following enhancements:
- * 
- *  - uses the Zumo Buzzer library to play a sound effect ("charge" melody) at start of competition and 
- *    whenever contact is made with an opposing robot
- *
- *  - randomizes the turn angle on border detection, so that the Zumo executes a more effective search pattern
- *
- *  - supports a FULL_SPEED_DURATION_LIMIT, allowing the robot to switch to a SUSTAINED_SPEED after a short 
- *    period of forward movement at FULL_SPEED.  In the example, both speeds are set to 400 (max), but this 
- *    feature may be useful to prevent runoffs at the turns if the sumo ring surface is unusually smooth.
- *
- *  - logging of accelerometer output to the serial monitor when LOG_SERIAL is #defined.
- *
- *  This example also makes use of the public domain RunningAverage library from the Arduino website; the relevant
- *  code has been copied into this .ino file and does not need to be downloaded separately.
- */
 
 // #define LOG_SERIAL // write log output to serial port
 
@@ -83,15 +45,18 @@ ZumoReflectanceSensorArray sensors(QTR_NO_EMITTER_PIN);
 // Motor Settings
 ZumoMotors motors;
 
+ZumoBuzzer buzzer;
+
+
 // these might need to be tuned for different motor types
-#define REVERSE_SPEED     200 // 0 is stopped, 400 is full speed
-#define TURN_SPEED        200
-#define SEARCH_SPEED      200
+#define REVERSE_SPEED     300 // 0 is stopped, 400 is full speed
+#define TURN_SPEED        300
+#define SEARCH_SPEED      180
 #define SUSTAINED_SPEED   400 // switches to SUSTAINED_SPEED from FULL_SPEED after FULL_SPEED_DURATION_LIMIT ms
 #define FULL_SPEED        400
 #define STOP_DURATION     100 // ms
 #define REVERSE_DURATION  200 // ms
-#define TURN_DURATION     300 // ms
+#define TURN_DURATION     180 // ms
 
 #define RIGHT 1
 #define LEFT -1
@@ -105,12 +70,6 @@ unsigned long full_speed_start_time;
   if (speed == FullSpeed) full_speed_start_time = loop_start_time;
 
 
-
-// Sound Effects
-ZumoBuzzer buzzer;
-const char sound_effect[] PROGMEM = "O4 T100 V15 L4 MS g12>c12>e12>G6>E12 ML>G2"; // "charge" melody
- // use V0 to suppress sound effect; v15 for max volume
- 
  // Timing
 unsigned long loop_start_time;
 unsigned long last_turn_time;
@@ -198,7 +157,7 @@ void setup()
   //motors.flipRightMotor(true);
 
   pinMode(LED, HIGH);
-  buzzer.playMode(PLAY_AUTOMATIC);
+  buzzer.playMode(PLAY_CHECK);
   waitForButtonAndCountDown(false);
 }
 
@@ -212,17 +171,37 @@ void waitForButtonAndCountDown(bool restarting)
   digitalWrite(LED, HIGH);
   button.waitForButton();
   digitalWrite(LED, LOW);
-   
-  // play audible countdown
-  for (int i = 0; i < 3; i++)
-  {
-    delay(1000);
-    buzzer.playNote(NOTE_G(3), 50, 12);
-  }
-  delay(1000);
-  buzzer.playFromProgramSpace(sound_effect);
-  delay(1000);
   
+  // visible countdown
+  for (int i = 0; i < 4; i++)
+  {
+    digitalWrite(LED, HIGH);
+    buzzer.playNote(NOTE_C(5), 250, 10);
+    delay(250);
+    digitalWrite(LED, LOW);
+    delay(750);
+  }
+
+  buzzer.playNote(NOTE_C(6), 500, 10);
+
+  digitalWrite(LED, HIGH);
+  delay(140);
+  digitalWrite(LED, LOW);
+  delay(130);
+  digitalWrite(LED, HIGH);
+  delay(120);
+  digitalWrite(LED, LOW);
+  delay(110);
+  digitalWrite(LED, HIGH);
+  delay(100);
+  digitalWrite(LED, LOW);
+  delay(90);
+  digitalWrite(LED, HIGH);
+  delay(80);
+  digitalWrite(LED, LOW);
+  delay(70);
+  digitalWrite(LED, HIGH);
+
   // reset loop variables
   in_contact = false;  // 1 if contact made; 0 if no contact or contact lost
   contact_made_time = 0;
@@ -337,7 +316,6 @@ void on_contact_made()
   in_contact = true;
   contact_made_time = loop_start_time;
   setForwardSpeed(FullSpeed);
-  buzzer.playFromProgramSpace(sound_effect);
 }
 
 // reset forward speed
