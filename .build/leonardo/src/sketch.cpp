@@ -1,4 +1,9 @@
+#include <Arduino.h>
 #include <ZumoMotors.h>
+void setup();
+void loop();
+#line 1 "src/sketch.ino"
+//#include <ZumoMotors.h>
 
 /*
  * This example uses the ZumoMotors library to drive each motor on the Zumo
@@ -20,7 +25,6 @@ ZumoMotors motors;
 
 void setup()
 {
-  Serial.begin(9600);
   pinMode(LED_PIN, OUTPUT);
 
   // uncomment one or both of the following lines if your motors' directions need to be flipped

@@ -13,7 +13,7 @@ ZumoMotors motors;
 Pushbutton button(ZUMO_BUTTON);
 
 
-#define FULL_SPEED 200
+#define FULL_SPEED 100
 #define HALF_SPEED 50
 
 #define EPSILON 10
@@ -28,11 +28,8 @@ void setup()
 
   compass.init();
   compass.enableDefault();
-  compass.m_min = (LSM303::vector<int16_t>){-1240, -616, -4096};
-  compass.m_max = (LSM303::vector<int16_t>){-648, +174, -4096};
-  
-//  min: { -1240,   -616,  -4096}    max: {  -648,   +174,  -4096}
-
+  compass.m_min = (LSM303::vector<int16_t>){-1226, -4096, -4096};
+  compass.m_max = (LSM303::vector<int16_t>){-474, -1504, -4096};
 
 
   // Wait for the user button to be pressed and released
@@ -46,17 +43,17 @@ void loop()
 
   int origin, current, final;
 
-  // DECALAGE
-  compass.read();
-  origin = int(compass.heading());
-  final = (origin + 55) % 360;
-  motors.setLeftSpeed(HALF_SPEED);
-  motors.setRightSpeed(FULL_SPEED);
-  do {
-    compass.read();
-    current = int(compass.heading());
-    Serial.println(current);
-  } while (abs(current - final) > EPSILON);
+/*  // DECALAGE*/
+/*  compass.read();*/
+/*  origin = int(compass.heading());*/
+/*  final = (origin + 305) % 360;*/
+/*  motors.setLeftSpeed(-HALF_SPEED);*/
+/*  motors.setRightSpeed(HALF_SPEED);*/
+/*  do {*/
+/*    compass.read();*/
+/*    current = int(compass.heading());*/
+/*    Serial.println(current);*/
+/*  } while (abs(current - final) > EPSILON);*/
 
 
   // PLUS_LINE
@@ -98,9 +95,21 @@ void loop()
   motors.setRightSpeed(FULL_SPEED);
   delay(100);
 
-    motors.setLeftSpeed(0);
-    motors.setRightSpeed(0);
+/*  // DECALAGE*/
+/*  compass.read();*/
+/*  origin = int(compass.heading());*/
+/*  final = (origin + 35) % 360;*/
+/*  motors.setLeftSpeed(HALF_SPEED);*/
+/*  motors.setRightSpeed(-HALF_SPEED);*/
+/*  do {*/
+/*    compass.read();*/
+/*    current = int(compass.heading());*/
+/*    Serial.println(current);*/
+/*  } while (abs(current - final) > EPSILON);*/
 
-    delay(5000);
+  motors.setLeftSpeed(0);
+  motors.setRightSpeed(0);
+
+  delay(5000);
 }
 
