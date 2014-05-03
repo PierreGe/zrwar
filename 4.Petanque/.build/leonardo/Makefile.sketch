@@ -1,0 +1,14 @@
+
+
+
+
+
+.build/leonardo/src/petanque.cpp : src/petanque.ino
+	@mkdir -p .build/leonardo/src
+	@echo [93msrc/petanque.ino[0m
+	@/usr/local/bin/ino preproc  -o $@ $^
+
+
+all : .build/leonardo/src/petanque.cpp
+	@true
+
